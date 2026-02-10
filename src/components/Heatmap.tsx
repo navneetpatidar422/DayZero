@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StreakLog } from '../../types';
+import { StreakLog } from '../types';
 
 interface HeatmapProps {
   logs: StreakLog[];

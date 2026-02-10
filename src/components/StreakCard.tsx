@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Streak, StreakLog, MILESTONES } from '../../types';
+import { Streak, StreakLog, MILESTONES } from '../types';
 import { Heatmap } from './Heatmap';
 import { Countdown } from './Countdown';
 import { DB } from '../services/db';
@@ -8,10 +7,10 @@ import { DB } from '../services/db';
 interface StreakCardProps {
   streak: Streak;
   onComplete: (id: string, note?: string) => void;
+  onRestart: (id: string) => void;
 }
 
-export const StreakCard: React.FC<StreakCardProps> = ({ streak, onComplete }) => {
-  const [note, setNote] = useState('');
+export const StreakCard: React.FC<StreakCardProps> = ({ streak, onComplete, onRestart }) => {
   const [bounce, setBounce] = useState(false);
   const logs = DB.logs.getByStreak(streak.id);
   
@@ -25,7 +24,16 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streak, onComplete }) =>
   const isBroken = streak.status === 'BROKEN';
   const isConquered = streak.status === 'CONQUERED';
 
-  const currentTag = [...MILESTONES].reverse().find(m => streak.currentStreakCount >= m.value)?.label || 'RECRUIT';
+  // Milestone logic for "Unlocking" effect
+  const nextMilestone = MILESTONES.find(m => streak.currentStreakCount < m.value) || MILESTONES[MILESTONES.length - 1];
+  const prevMilestone = [...MILESTONES].reverse().find(m => streak.currentStreakCount >= m.value);
+  const prevValue = prevMilestone ? prevMilestone.value : 0;
+  
+  // Calculate percentage of progress through the current bracket (e.g., from 0 to 7, or 7 to 15)
+  const bracketRange = nextMilestone.value - prevValue;
+  const currentInRange = streak.currentStreakCount - prevValue;
+  const tagFillPercent = Math.min(100, Math.max(0, (currentInRange / bracketRange) * 100));
+
   const progressPercent = (streak.currentStreakCount / streak.targetDays) * 100;
 
   // Trigger bounce effect when streak count changes
@@ -96,23 +104,34 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streak, onComplete }) =>
           </div>
         </div>
         <div className="h-16 w-px bg-zinc-800" />
+        
         <div className="flex flex-col">
-          <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1">CURRENT_TAG</span>
-          <span className={`text-3xl font-black italic tracking-tighter uppercase ${isBroken ? 'text-zinc-800' : 'text-zinc-100'}`}>{currentTag}</span>
+          <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1">TARGET_TAG</span>
+          <div className="relative">
+            {/* Ghost text (faded part) */}
+            <span className="text-3xl font-black italic tracking-tighter uppercase text-zinc-800/40 select-none whitespace-nowrap">
+              {nextMilestone.label}
+            </span>
+            {/* Filled text (progress part) */}
+            <span 
+              className={`absolute top-0 left-0 text-3xl font-black italic tracking-tighter uppercase transition-all duration-1000 overflow-hidden whitespace-nowrap ${
+                isBroken ? 'text-zinc-800' : isConquered ? 'text-yellow-500' : isDoneToday ? 'text-emerald-400' : 'text-zinc-100'
+              }`}
+              style={{ clipPath: `inset(0 ${100 - tagFillPercent}% 0 0)` }}
+            >
+              {nextMilestone.label}
+            </span>
+          </div>
+          <span className="text-[8px] font-black text-zinc-700 mt-1 tracking-widest uppercase">
+            {Math.round(tagFillPercent)}%_UNLOCKED
+          </span>
         </div>
       </div>
 
       {!isBroken && !isDoneToday && !isConquered && (
         <div className="space-y-4 relative z-10 animate-fade-up">
-          <input
-            type="text"
-            placeholder="Log Proof (Optional)..."
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className="w-full bg-black border border-zinc-800 rounded-none p-4 text-xs text-zinc-200 focus:outline-none focus:border-rose-600 transition-colors"
-          />
           <button
-            onClick={() => onComplete(streak.id, note)}
+            onClick={() => onComplete(streak.id)}
             className="w-full bg-rose-600 text-white font-black py-5 uppercase tracking-[0.4em] hover:bg-rose-500 transition-all active:scale-95 text-xs shadow-[0_0_20px_rgba(255,0,60,0.1)]"
           >
             I SHOWED UP TODAY
@@ -120,13 +139,26 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streak, onComplete }) =>
         </div>
       )}
 
-      {(isDoneToday || isConquered || isBroken) && (
+      {isBroken && (
+        <div className="space-y-4 relative z-10 animate-fade-up">
+          <div className="text-center p-5 border border-red-900 text-red-700 bg-red-950/20 text-xs font-black uppercase tracking-[0.3em] italic">
+            PROTOCOL_TERMINATED
+          </div>
+          <button
+            onClick={() => onRestart(streak.id)}
+            className="w-full bg-white text-black font-black py-5 uppercase tracking-[0.4em] hover:bg-rose-600 hover:text-white transition-all active:scale-95 text-xs"
+          >
+            RESTART_PROTOCOL
+          </button>
+        </div>
+      )}
+
+      {(isDoneToday || isConquered) && !isBroken && (
         <div className={`text-center p-5 border text-xs font-black uppercase tracking-[0.3em] italic ${
-          isBroken ? 'border-red-900 text-red-700 bg-red-950/20' : 
           isConquered ? 'border-yellow-600 text-yellow-500 bg-yellow-950/20' :
           'border-emerald-500/30 text-emerald-500 bg-emerald-500/5'
         }`}>
-          {isBroken ? 'PROTOCOL_TERMINATED' : isConquered ? 'CONTRACT_FULFILLED' : 'IDENTITY_SECURED'}
+          {isConquered ? 'CONTRACT_FULFILLED' : 'IDENTITY_SECURED'}
         </div>
       )}
 

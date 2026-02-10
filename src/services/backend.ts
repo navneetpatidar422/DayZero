@@ -1,5 +1,5 @@
 
-import { User, Streak, StreakLog, Badge, StreakStatus } from '../../types';
+import { User, Streak, StreakLog, Badge, StreakStatus } from '../types';
 import { DB } from './db';
 
 export const Backend = {

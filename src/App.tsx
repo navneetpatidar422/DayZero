@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { User, Streak, Badge } from '../types';
+import { User, Streak, Badge } from './types.ts';
 
 import { DB } from './services/db.ts';
 import { StreakService } from './services/streakService.ts';
@@ -252,6 +252,20 @@ const App: React.FC = () => {
     }
   };
 
+   const restartStreak = (streakId: string) => {
+    const streak = DB.streaks.getById(streakId);
+    if (streak) {
+      streak.status = 'ACTIVE';
+      streak.currentStreakCount = 0;
+      streak.lastCompletedDate = null;
+      streak.createdAt = new Date().toISOString(); // Reset timeline to start from zero
+      DB.streaks.update(streak);
+      loadData();
+    }
+  };
+
+  const isAdvancedUser = streaks.some(s => s.currentStreakCount >= 7);
+
   if (initializing) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[1000] splash-active">
@@ -484,7 +498,7 @@ const App: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           {streaks.map(s => (
-            <StreakCard key={s.id} streak={s} onComplete={completeTask} />
+              <StreakCard key={s.id} streak={s} onComplete={completeTask} onRestart={restartStreak} />
           ))}
           {streaks.length === 0 && (
             <div className="lg:col-span-3 border border-zinc-900 p-40 text-center cursor-pointer hover:bg-zinc-900/10 transition-colors animate-fade-up group" onClick={() => setShowAdd(true)}>

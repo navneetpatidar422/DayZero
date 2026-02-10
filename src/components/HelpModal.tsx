@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MILESTONES } from '../../types';
+import { MILESTONES } from '../types';
 
 interface HelpModalProps {
   onClose: () => void;

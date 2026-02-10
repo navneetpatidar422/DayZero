@@ -1,6 +1,6 @@
 
 import { DB } from './db';
-import { Streak, StreakLog, Badge, MILESTONES, StreakStatus } from '../../types';
+import { Streak, StreakLog, Badge, MILESTONES, StreakStatus } from '../types';
 
 export const StreakService = {
   validateStreaks: (userId: string): Streak[] => {
