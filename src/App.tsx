@@ -262,7 +262,7 @@ const App: React.FC = () => {
            <div className="w-64 h-[2px] bg-zinc-900 relative overflow-hidden">
               <div className="absolute inset-0 bg-rose-600 w-full translate-x-[-100%] animate-[scanline_0.5s_infinite_linear]"></div>
            </div>
-           <p className="mono text-[8px] text-zinc-500 font-bold tracking-[0.8em] animate-pulse">INITIATING_COLD_UPLINK</p>
+           <p className="mono text-[8px] text-zinc-500 font-bold tracking-[0.8em] animate-pulse">Built by Navneet Patidar</p>
         </div>
       </div>
     );
