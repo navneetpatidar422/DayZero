@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { User } from '../types';
-import { DB } from "../src/services/db";
+import { User } from '../../types';
+import { DB } from "../services/db";
 
 
 const AVATARS = [

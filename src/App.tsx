@@ -2,15 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { User, Streak, Badge } from '../types';
 
-import { DB } from './services/db';
-import { StreakService } from './services/streakService';
-import { Backend } from './services/backend';
+import { DB } from './services/db.ts';
+import { StreakService } from './services/streakService.ts';
+import { Backend } from './services/backend.ts';
 
-import { StreakCard } from '../components/StreakCard';
-import { BadgeGallery } from '../components/BadgeGallery';
-import { HelpModal } from '../components/HelpModal';
-import { ProfileModal } from '../components/ProfileModal';
-
+import { StreakCard } from './components/StreakCard.tsx';
+import { BadgeGallery } from './components/BadgeGallery.tsx';
+import { HelpModal } from './components/HelpModal.tsx';
+import { ProfileModal } from './components/ProfileModal.tsx';
+import { UrgencyClock } from './components/UrgencyClock.tsx'; 
 
 type AuthStep = 'LOGIN' | 'REGISTER' | 'FORGOT_PASSWORD' | 'VERIFY_SECURITY' | 'RESET_PASSWORD';
 
@@ -28,7 +28,7 @@ const RotatingTypewriter: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [loopNum, setLoopNum] = useState(0);
   const phrases = [
-    "Created by Navneet only for YOU",
+    "Built by Navneet only for YOU",
     "Inspired from personal experiences."
   ];
 
@@ -260,7 +260,7 @@ const App: React.FC = () => {
         </h1>
         <div className="mt-12 flex flex-col items-center gap-4">
            <div className="w-64 h-[2px] bg-zinc-900 relative overflow-hidden">
-              <div className="absolute inset-0 bg-rose-600 w-full translate-x-[-100%] animate-[scanline_0.5s_infinite_linear]"></div>
+             <div className="absolute inset-0 bg-rose-600 w-full translate-x-[-100%] animate-[scanline_0.5s_infinite_linear]"></div>
            </div>
            <p className="mono text-[8px] text-zinc-500 font-bold tracking-[0.8em] animate-pulse">Built by Navneet Patidar</p>
         </div>
@@ -456,6 +456,10 @@ const App: React.FC = () => {
         </div>
       </header>
 
+      {/* --- CHANGE 2: Component Placement --- */}
+      {/* Placed here so the background spans full width, outside the container of <main> */}
+      <UrgencyClock />
+
       <main className="max-w-6xl mx-auto px-6 py-20">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12 mb-24 animate-fade-up">
           <div className="max-w-2xl">
@@ -549,9 +553,9 @@ const App: React.FC = () => {
       <footer className="mt-40 border-t border-zinc-900 py-32 text-center bg-black">
         <div className="mb-12 opacity-40">
            <div className="flex justify-center gap-4 mb-4">
-              {Array.from({length: 12}).map((_, i) => (
-                <div key={i} className={`w-1 h-8 bg-zinc-900 ${i % 3 === 0 ? 'bg-zinc-700' : ''}`} />
-              ))}
+             {Array.from({length: 12}).map((_, i) => (
+               <div key={i} className={`w-1 h-8 bg-zinc-900 ${i % 3 === 0 ? 'bg-zinc-700' : ''}`} />
+             ))}
            </div>
            <p className="mono text-[8px] text-zinc-800 tracking-[1em] uppercase">SYSTEM_STABILITY_SECURED</p>
         </div>
