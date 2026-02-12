@@ -1,6 +1,12 @@
-
 import { User, Streak, StreakLog, Badge, StreakStatus } from '../types';
 import { DB } from './db';
+
+const getISTTodayTimestamp = () => {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const ist = new Date(utc + (3600000 * 5.5));
+  return new Date(ist.getFullYear(), ist.getMonth(), ist.getDate()).getTime();
+};
 
 export const Backend = {
   delay: (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms)),
@@ -37,19 +43,22 @@ export const Backend = {
     sync: async (userId: string) => {
       await Backend.delay(100);
       const streaks = DB.streaks.getByUser(userId);
-      const now = new Date();
-      const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).getTime();
+      const todayIST = getISTTodayTimestamp();
       
       let modified = false;
       streaks.forEach(s => {
-        if (s.status === 'BROKEN') return;
+        if (s.status !== 'ACTIVE') return;
         
         const created = new Date(s.createdAt);
         const last = s.lastCompletedDate ? new Date(s.lastCompletedDate) : created;
-        const lastDayUTC = new Date(Date.UTC(last.getUTCFullYear(), last.getUTCMonth(), last.getUTCDate())).getTime();
         
-        // If more than 24 hours (86.4m ms) since the end of the day they should have completed it.
-        if (todayUTC - lastDayUTC > 86400000) {
+        // Convert last completion to IST day start
+        const lastUTC = last.getTime() + (last.getTimezoneOffset() * 60000);
+        const lastIST = new Date(lastUTC + (3600000 * 5.5));
+        const lastDayIST = new Date(lastIST.getFullYear(), lastIST.getMonth(), lastIST.getDate()).getTime();
+        
+        // If today is more than 1 day ahead of the last completion day in IST
+        if (todayIST - lastDayIST > 86400000) {
           s.status = 'BROKEN';
           s.currentStreakCount = 0;
           modified = true;

@@ -14,29 +14,35 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streak, onComplete, onRe
   const [bounce, setBounce] = useState(false);
   const logs = DB.logs.getByStreak(streak.id);
   
-  const now = new Date();
-  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).getTime();
+  // IST Date Logic for UI synchronization
+  const getISTToday = () => {
+    const d = new Date();
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    const ist = new Date(utc + (3600000 * 5.5));
+    return new Date(ist.getFullYear(), ist.getMonth(), ist.getDate()).getTime();
+  };
+
+  const isDoneToday = streak.lastCompletedDate ? (() => {
+    const d = new Date(streak.lastCompletedDate);
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    const ist = new Date(utc + (3600000 * 5.5));
+    const lastCompletedDay = new Date(ist.getFullYear(), ist.getMonth(), ist.getDate()).getTime();
+    return lastCompletedDay === getISTToday();
+  })() : false;
   
-  const lastDate = streak.lastCompletedDate ? new Date(streak.lastCompletedDate) : null;
-  const lastDateUTC = lastDate ? new Date(Date.UTC(lastDate.getUTCFullYear(), lastDate.getUTCMonth(), lastDate.getUTCDate())).getTime() : null;
-  
-  const isDoneToday = lastDateUTC === todayUTC;
   const isBroken = streak.status === 'BROKEN';
   const isConquered = streak.status === 'CONQUERED';
 
-  // Milestone logic for "Unlocking" effect
   const nextMilestone = MILESTONES.find(m => streak.currentStreakCount < m.value) || MILESTONES[MILESTONES.length - 1];
   const prevMilestone = [...MILESTONES].reverse().find(m => streak.currentStreakCount >= m.value);
   const prevValue = prevMilestone ? prevMilestone.value : 0;
   
-  // Calculate percentage of progress through the current bracket (e.g., from 0 to 7, or 7 to 15)
   const bracketRange = nextMilestone.value - prevValue;
   const currentInRange = streak.currentStreakCount - prevValue;
   const tagFillPercent = Math.min(100, Math.max(0, (currentInRange / bracketRange) * 100));
 
   const progressPercent = (streak.currentStreakCount / streak.targetDays) * 100;
 
-  // Trigger bounce effect when streak count changes
   useEffect(() => {
     if (streak.currentStreakCount > 0) {
       setBounce(true);
@@ -108,11 +114,9 @@ export const StreakCard: React.FC<StreakCardProps> = ({ streak, onComplete, onRe
         <div className="flex flex-col">
           <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1">TARGET_TAG</span>
           <div className="relative">
-            {/* Ghost text (faded part) */}
             <span className="text-3xl font-black italic tracking-tighter uppercase text-zinc-800/40 select-none whitespace-nowrap">
               {nextMilestone.label}
             </span>
-            {/* Filled text (progress part) */}
             <span 
               className={`absolute top-0 left-0 text-3xl font-black italic tracking-tighter uppercase transition-all duration-1000 overflow-hidden whitespace-nowrap ${
                 isBroken ? 'text-zinc-800' : isConquered ? 'text-yellow-500' : isDoneToday ? 'text-emerald-400' : 'text-zinc-100'
